@@ -1,0 +1,233 @@
+import re
+import json
+import csv
+from io import StringIO
+from bs4 import BeautifulSoup
+import requests
+
+
+#statistics
+url_stats = 'https://finance.yahoo.com/quote/{}/key-statistics?p={}'
+#profile
+url_profile = 'https://finance.yahoo.com/quote/{}/profile?p={}'
+#financials
+url_fin = 'https://finance.yahoo.com/quote/{}/financials?p={}'
+
+
+stock = input()
+
+response = requests.get(url_fin.format(stock,stock))
+soup = BeautifulSoup(response.text, 'html.parser')
+
+
+pattern = re.compile('\s--\sData\s--\s')   
+script_data = soup.find('script', text=pattern).contents[0]
+
+
+start = script_data.find("context")-2
+json_data = json.loads(script_data[start:-12])
+
+
+
+annual_is = json_data['context']['dispatcher']['stores']['QuoteSummaryStore']['incomeStatementHistory']['incomeStatementHistory']
+quarterly_is = json_data['context']['dispatcher']['stores']['QuoteSummaryStore']['incomeStatementHistoryQuarterly']['incomeStatementHistory']
+
+
+
+annual_cf = json_data['context']['dispatcher']['stores']['QuoteSummaryStore']['cashflowStatementHistory']['cashflowStatements']
+quarterly_cf = json_data['context']['dispatcher']['stores']['QuoteSummaryStore']['cashflowStatementHistoryQuarterly']['cashflowStatements']
+
+
+
+annual_bs = json_data['context']['dispatcher']['stores']['QuoteSummaryStore']['balanceSheetHistory']['balanceSheetStatements']
+quarterly_bs = json_data['context']['dispatcher']['stores']['QuoteSummaryStore']['balanceSheetHistoryQuarterly']['balanceSheetStatements']
+
+
+
+#decalre annual is statements
+annual_is_stmts = []
+
+#annual is 
+for s in annual_is:
+    statement = {}
+    for key, val in s.items():
+        try:
+            statement[key] = val['raw']
+        except TypeError:
+            continue
+        except KeyError:
+            continue
+    annual_is_stmts.append(statement)
+    
+    
+    
+#decalre quarterly is statements
+quarterly_is_stmts = []
+
+#quarterly is
+for s in quarterly_is:
+    statement = {}
+    for key, val in s.items():
+        try:
+            statement[key] = val['raw']
+        except TypeError:
+            continue
+        except KeyError:
+            continue
+    quarterly_is_stmts.append(statement)
+    
+    
+    
+#decalre annual cf
+annual_cf_stmts = []
+#declare quarterly cf
+quarterly_cf_stmts = []
+
+
+#annual cf
+for s in annual_cf:
+    statement = {}
+    for key, val in s.items():
+        try:
+            statement[key] = val['raw']
+        except TypeError:
+            continue
+        except KeyError:
+            continue
+    annual_cf_stmts.append(statement)
+     
+    
+#quarterly cf
+for s in quarterly_cf:
+    statement = {}
+    for key, val in s.items():
+        try:
+            statement[key] = val['raw']
+        except TypeError:
+            continue
+        except KeyError:
+            continue
+    quarterly_cf_stmts.append(statement)
+    
+    
+#decalre annual bs
+annual_bs_stmts = []
+#declare quarterly bs
+quarterly_bs_stmts = []
+
+
+#annual bs
+for s in annual_bs:
+    statement = {}
+    for key, val in s.items():
+        try:
+            statement[key] = val['raw']
+        except TypeError:
+            continue
+        except KeyError:
+            continue
+    annual_bs_stmts.append(statement)
+    
+
+
+#quarterly bs
+for s in quarterly_bs:
+    statement = {}
+    for key, val in s.items():
+        try:
+            statement[key] = val['raw']
+        except TypeError:
+            continue
+        except KeyError:
+            continue
+    quarterly_bs_stmts.append(statement)
+    
+    
+    
+#Profile data
+#declare response
+response = requests.get(url_profile.format(stock,stock))
+#getParser
+soup = BeautifulSoup(response.text, 'html.parser')
+#json to py
+pattern = re.compile('\s--\sData\s--\s')   
+script_data = soup.find('script', text=pattern).contents[0]
+#declare start
+start = script_data.find("context")-2
+#json data load
+json_data = json.loads(script_data[start:-12])
+
+
+#Stat data
+#declare response
+response = requests.get(url_stats.format(stock,stock))
+#getParser
+soup = BeautifulSoup(response.text, 'html.parser')
+#json to py
+pattern = re.compile('\s--\sData\s--\s')   
+script_data = soup.find('script', text=pattern).contents[0]
+#declare start
+start = script_data.find("context")-2
+#json data load
+json_data = json.loads(script_data[start:-12])
+
+#stock api params
+stocks_url = 'https://query1.finance.yahoo.com/v7/finance/download/{}'
+
+params = {
+
+'range':'5y',
+'interval':'1d',
+'events':'history'
+}
+
+#get params
+response = requests.get(stocks_url.format(stock), params=params)
+
+
+
+#table
+print('Showing ticker: ' + stock)
+print()
+print()
+print('Annual Income Statement')
+print()
+print(annual_is_stmts[0])
+print()
+print()
+print('Quarterly Income Statement')
+print()
+print(quarterly_is_stmts[0])
+print()
+print()
+print('Annual Cash Flow')
+print()
+print(annual_cf_stmts[0])
+print()
+print()
+print('Quarterly Cash Flow')
+print()
+print(quarterly_cf_stmts[0])
+print()
+print()
+print('Annual Balance Sheet')
+print()
+print(annual_bs_stmts[0])
+print()
+print()
+print('Quarterly Balance Sheet')
+print()
+print(quarterly_bs_stmts[0])
+
+
+
+
+print()
+print()
+print('Historical Data')
+print()
+file = StringIO(response.text)
+reader=csv.reader(file)
+data=list(reader)
+for row in data [:5]:
+    print(row)
